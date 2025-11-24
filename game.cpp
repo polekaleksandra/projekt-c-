@@ -38,7 +38,7 @@ void Game::update() {
         
     }
 
-    
+   
     if (m_pilka.getY() > HEIGHT - 50) {
         m_gameOver = true;
         std::cout << "KONIEC GRY - pilka spadla!\n";
@@ -61,7 +61,7 @@ void Game::update() {
 void Game::render(sf::RenderWindow& window) {
     m_paletka.draw(window);
 
-   
+    
     if (!m_gameOver) {
         m_pilka.draw(window);
     }
@@ -90,4 +90,11 @@ void Game::reset() {
             m_bloki.emplace_back(sf::Vector2f(posX, posY), sf::Vector2f(ROZMIAR_BLOKU_X, ROZMIAR_BLOKU_Y), L);
         }
     }
+}
+
+
+GameState Game::captureState() const {
+    GameState state;
+    state.capture(m_paletka, m_pilka, m_bloki);
+    return state;
 }
