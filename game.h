@@ -7,6 +7,7 @@
 #include "brick.h"
 #include "paddle.h"
 #include "ball.h"
+#include "GameState.h"  
 
 class Game {
 public:
@@ -15,6 +16,9 @@ public:
     void render(sf::RenderWindow& window);
     bool isGameOver() const { return m_gameOver; }
     void reset();
+
+    
+    GameState captureState() const;
 
 private:
     const float WIDTH = 800.f;
