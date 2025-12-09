@@ -5,6 +5,8 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
+#include "ball.h" 
+
 class Menu {
 public:
     Menu(float width, float height);
@@ -12,6 +14,8 @@ public:
     void MoveUp();
     void MoveDown();
     int getSelectedItem() { return selectedItemIndex; }
+
+    void changeShapeText(BallType type);
 
 private:
     int selectedItemIndex;
