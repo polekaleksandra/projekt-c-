@@ -4,6 +4,7 @@
 
 #include <SFML/System.hpp>
 #include <vector>
+#include <string>
 #include "BlockData.h"
 
 
@@ -15,10 +16,12 @@ class GameState {
 public:
     GameState() = default;
 
-    
+   
     void capture(const Paletka& paddle, const Pilka& ball, const std::vector<Brick>& bricks);
+    bool saveToFile(const std::string& filename);
+    bool loadFromFile(const std::string& filename);  
 
-    
+   
     const sf::Vector2f& getPaddlePosition() const { return paddlePosition; }
     const sf::Vector2f& getBallPosition() const { return ballPosition; }
     const sf::Vector2f& getBallVelocity() const { return ballVelocity; }
