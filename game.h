@@ -4,10 +4,10 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
-#include "brick.h"
 #include "paddle.h"
 #include "ball.h"
-#include "GameState.h"  
+#include "brick.h"  
+#include "GameState.h"
 
 class Game {
 public:
@@ -16,9 +16,8 @@ public:
     void render(sf::RenderWindow& window);
     bool isGameOver() const { return m_gameOver; }
     void reset();
-
-    
-    GameState captureState() const;
+    void captureState(GameState& state) const;
+    bool loadState(const GameState& state);
 
 private:
     const float WIDTH = 800.f;
@@ -27,6 +26,8 @@ private:
     Pilka m_pilka;
     std::vector<Brick> m_bloki;
     bool m_gameOver = false;
+    const float BRICK_WIDTH = (800.f - (8 - 1) * 2.f) / 8;
+    const float BRICK_HEIGHT = 25.f;
 };
 
 #endif
