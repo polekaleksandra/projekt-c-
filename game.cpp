@@ -1,6 +1,5 @@
 #include "Game.h"
 #include <iostream>
-#pragma once
 
 Game::Game()
     : m_paletka(400.f, 550.f, 100.f, 20.f, 8.f)
@@ -38,7 +37,6 @@ void Game::update() {
         
     }
 
-   
     if (m_pilka.getY() > HEIGHT - 50) {
         m_gameOver = true;
         std::cout << "KONIEC GRY - pilka spadla!\n";
@@ -51,6 +49,7 @@ void Game::update() {
         }
     }
 
+    
     for (int i = static_cast<int>(m_bloki.size()) - 1; i >= 0; i--) {
         if (m_bloki[i].czyZniszczony()) {
             m_bloki.erase(m_bloki.begin() + i);
@@ -61,13 +60,13 @@ void Game::update() {
 void Game::render(sf::RenderWindow& window) {
     m_paletka.draw(window);
 
-    
     if (!m_gameOver) {
         m_pilka.draw(window);
     }
 
+    
     for (auto& blok : m_bloki) {
-        blok.draw(window);
+        window.draw(blok);  
     }
 }
 
@@ -92,9 +91,34 @@ void Game::reset() {
     }
 }
 
-
-GameState Game::captureState() const {
-    GameState state;
+void Game::captureState(GameState& state) const {
     state.capture(m_paletka, m_pilka, m_bloki);
-    return state;
+}
+
+bool Game::loadState(const GameState& state) {
+    try {
+       
+        sf::Vector2f paddlePos = state.getPaddlePosition();
+        m_paletka.setPosition(paddlePos.x, paddlePos.y);
+
+        sf::Vector2f ballPos = state.getBallPosition();
+        sf::Vector2f ballVel = state.getBallVelocity();
+        m_pilka.setState(ballPos.x, ballPos.y, ballVel.x, ballVel.y);
+
+        m_bloki.clear();
+        const auto& blocks = state.getBlocks();
+        for (const auto& block : blocks) {
+            sf::Vector2f pos(block.x, block.y);
+            sf::Vector2f size(BRICK_WIDTH, BRICK_HEIGHT);
+            m_bloki.emplace_back(pos, size, block.hp);
+        }
+
+        m_gameOver = false;
+        std::cout << "Stan gry wczytany pomyslnie\n";
+        return true;
+    }
+    catch (...) {
+        std::cout << "Blad podczas wczytywania stanu gry\n";
+        return false;
+    }
 }
