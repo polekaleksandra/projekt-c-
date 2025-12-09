@@ -1,8 +1,9 @@
 #include "Game.h"
 #include "Menu.h"
-#include "GameState.h"  
+#include "GameState.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <fstream>
 
 enum class AppState { Menu, Playing, Scores, Exiting };
 
@@ -14,11 +15,9 @@ int main() {
     Game game;
     AppState currentState = AppState::Menu;
 
-  
     GameState savedGameState;
     bool hasSavedState = false;
 
-    
     sf::Font font;
     bool fontLoaded = false;
 
@@ -30,9 +29,6 @@ int main() {
     }
     else if (font.loadFromFile("")) {
         fontLoaded = true;
-    }
-    else {
-        std::cout << "Nie udalo sie zaladowac zadnej czcionki\n";
     }
 
     while (window.isOpen()) {
@@ -53,14 +49,30 @@ int main() {
                     }
                     if (event.key.code == sf::Keyboard::Enter) {
                         int selected = menu.getSelectedItem();
-                        if (selected == 0) {
+                        if (selected == 0) {  
                             currentState = AppState::Playing;
                             game.reset();
+                            std::cout << "Nowa gra rozpoczeta\n";
                         }
-                        else if (selected == 1) {
+                        else if (selected == 1) {  
+                            GameState loadedState;
+                            if (loadedState.loadFromFile("zapis.txt")) {
+                                if (game.loadState(loadedState)) {
+                                    currentState = AppState::Playing;
+                                    std::cout << "Gra wczytana pomyslnie\n";
+                                }
+                                else {
+                                    std::cout << "Blad podczas wczytywania stanu do gry\n";
+                                }
+                            }
+                            else {
+                                std::cout << "Nie mozna wczytac zapisanej gry\n";
+                            }
+                        }
+                        else if (selected == 2) {  
                             currentState = AppState::Scores;
                         }
-                        else if (selected == 2) {
+                        else if (selected == 3) {  
                             window.close();
                         }
                     }
@@ -72,18 +84,24 @@ int main() {
                         currentState = AppState::Menu;
                     }
 
-                   
                     if (event.key.code == sf::Keyboard::P) {
-                        savedGameState = game.captureState();
+                        game.captureState(savedGameState);
                         hasSavedState = true;
                         std::cout << "Stan gry zapisany w pamieci! (P)\n";
                     }
 
-                   
-                    
+                    if (event.key.code == sf::Keyboard::F5) {
+                        GameState currentGameState;
+                        game.captureState(currentGameState);
+                        if (currentGameState.saveToFile("zapis.txt")) {
+                            std::cout << "Gra zapisana do pliku! (F5)\n";
+                        }
+                    }
+
                     if (event.key.code == sf::Keyboard::L && hasSavedState) {
-                        
-                        std::cout << "Wczytywanie stanu - funkcja niedostepna (L)\n";
+                        if (game.loadState(savedGameState)) {
+                            std::cout << "Stan gry wczytany z pamieci! (L)\n";
+                        }
                     }
                 }
             }
@@ -101,7 +119,6 @@ int main() {
                 game.update();
             }
             else {
-                
                 static sf::Clock gameOverClock;
                 if (gameOverClock.getElapsedTime().asSeconds() > 2.0f) {
                     currentState = AppState::Menu;
@@ -115,21 +132,33 @@ int main() {
         if (currentState == AppState::Menu) {
             menu.draw(window);
 
-            
-            if (hasSavedState && fontLoaded) {
-                sf::Text saveInfo;
-                saveInfo.setFont(font);
-                saveInfo.setString("Zapisany stan gry dostepny\n(Nacisnij L podczas gry)");
-                saveInfo.setCharacterSize(16);
-                saveInfo.setFillColor(sf::Color::Green);
-                saveInfo.setPosition(50, 500);
-                window.draw(saveInfo);
+            if (fontLoaded) {
+                std::ifstream testFile("zapis.txt");
+                bool saveFileExists = testFile.good();
+                testFile.close();
+
+                if (saveFileExists) {
+                    sf::Text saveInfo;
+                    saveInfo.setFont(font);
+                    saveInfo.setString("Plik zapisu gry istnieje\n(Wczytaj gre z menu)");
+                    saveInfo.setCharacterSize(16);
+                    saveInfo.setFillColor(sf::Color::Green);
+                    saveInfo.setPosition(50, 500);
+                    window.draw(saveInfo);
+                }
+
+                sf::Text menuControls;
+                menuControls.setFont(font);
+                menuControls.setString("Sterowanie menu:\nStrzalki - wybor\nEnter - potwierdz");
+                menuControls.setCharacterSize(16);
+                menuControls.setFillColor(sf::Color::Cyan);
+                menuControls.setPosition(50, 400);
+                window.draw(menuControls);
             }
         }
         else if (currentState == AppState::Playing) {
             game.render(window);
 
-            
             if (game.isGameOver()) {
                 if (fontLoaded) {
                     sf::Text gameOverText;
@@ -142,11 +171,10 @@ int main() {
                 }
             }
 
-            
             if (fontLoaded) {
                 sf::Text controls;
                 controls.setFont(font);
-                controls.setString("Sterowanie: A/D lub Strzalki\nP - zapisz stan (pamiec)\nL - wczytaj stan\nESC - menu");
+                controls.setString("Sterowanie gry:\nA/D lub Strzalki - ruch paletka\nP - zapisz stan (pamiec)\nF5 - zapisz stan (plik)\nL - wczytaj stan z pamieci\nESC - powrot do menu");
                 controls.setCharacterSize(16);
                 controls.setFillColor(sf::Color::Yellow);
                 controls.setPosition(20, 20);
@@ -165,18 +193,18 @@ int main() {
 
                 sf::Text scores;
                 scores.setFont(font);
-                scores.setString("1. Gracz 1 - 1000 pkt\n2. Gracz 2 - 800 pkt\n3. Gracz 3 - 600 pkt");
+                scores.setString("1. Gracz 1 - 1000 pkt\n2. Gracz 2 - 800 pkt\n3. Gracz 3 - 600 pkt\n4. Gracz 4 - 400 pkt\n5. Gracz 5 - 200 pkt");
                 scores.setCharacterSize(24);
                 scores.setFillColor(sf::Color::White);
-                scores.setPosition(300, 200);
+                scores.setPosition(280, 180);
                 window.draw(scores);
 
                 sf::Text instruction;
                 instruction.setFont(font);
-                instruction.setString("Nacisnij ESC lub ENTER aby wrocic");
+                instruction.setString("Nacisnij ESC lub ENTER aby wrocic do menu");
                 instruction.setCharacterSize(20);
                 instruction.setFillColor(sf::Color::Green);
-                instruction.setPosition(250, 400);
+                instruction.setPosition(200, 450);
                 window.draw(instruction);
             }
         }
