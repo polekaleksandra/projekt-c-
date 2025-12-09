@@ -1,33 +1,49 @@
 #include "Game.h"
 #include "Menu.h"
 #include "GameState.h"
+#include "ball.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
-#include <fstream>
+#include <fstream> 
+#include <string>  
 
 enum class AppState { Menu, Playing, Scores, Exiting };
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Arkanoid");
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Arkanoid - Projekt");
     window.setFramerateLimit(60);
+
+    sf::VertexArray background(sf::Quads, 4);
+    background[0].position = sf::Vector2f(0, 0);
+    background[1].position = sf::Vector2f(800, 0);
+    background[2].position = sf::Vector2f(800, 600);
+    background[3].position = sf::Vector2f(0, 600);
+    background[0].color = sf::Color(30, 0, 60);
+    background[1].color = sf::Color(30, 0, 60);
+    background[2].color = sf::Color(0, 0, 10);
+    background[3].color = sf::Color(0, 0, 10);
 
     Menu menu(800, 600);
     Game game;
     AppState currentState = AppState::Menu;
-
     GameState savedGameState;
     bool hasSavedState = false;
 
+    int currentShapeIndex = 0;
+
+    int highScore = 0;
+    int lastScore = 0;
+
+    std::ifstream inputFile("highscore.txt");
+    if (inputFile.is_open()) {
+        inputFile >> highScore;
+        inputFile.close();
+    }
+    
+
     sf::Font font;
     bool fontLoaded = false;
-
-    if (font.loadFromFile("arial.ttf")) {
-        fontLoaded = true;
-    }
-    else if (font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
-        fontLoaded = true;
-    }
-    else if (font.loadFromFile("")) {
+    if (font.loadFromFile("arial.ttf") || font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
         fontLoaded = true;
     }
 
@@ -35,81 +51,62 @@ int main() {
         sf::Event event;
 
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
-                window.close();
-            }
+            if (event.type == sf::Event::Closed) window.close();
 
             if (currentState == AppState::Menu) {
                 if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Up) {
-                        menu.MoveUp();
-                    }
-                    if (event.key.code == sf::Keyboard::Down) {
-                        menu.MoveDown();
-                    }
+                    if (event.key.code == sf::Keyboard::Up) menu.MoveUp();
+                    if (event.key.code == sf::Keyboard::Down) menu.MoveDown();
+
                     if (event.key.code == sf::Keyboard::Enter) {
                         int selected = menu.getSelectedItem();
-                        if (selected == 0) {  
+
+                        if (selected == 0) { 
                             currentState = AppState::Playing;
                             game.reset();
-                            std::cout << "Nowa gra rozpoczeta\n";
+                            game.setBallType(static_cast<BallType>(currentShapeIndex));
                         }
-                        else if (selected == 1) {  
+                        else if (selected == 1) { 
+                            currentShapeIndex = (currentShapeIndex + 1) % 3;
+                            menu.changeShapeText(static_cast<BallType>(currentShapeIndex));
+                        }
+                        else if (selected == 2) { 
                             GameState loadedState;
                             if (loadedState.loadFromFile("zapis.txt")) {
                                 if (game.loadState(loadedState)) {
                                     currentState = AppState::Playing;
-                                    std::cout << "Gra wczytana pomyslnie\n";
-                                }
-                                else {
-                                    std::cout << "Blad podczas wczytywania stanu do gry\n";
                                 }
                             }
-                            else {
-                                std::cout << "Nie mozna wczytac zapisanej gry\n";
-                            }
                         }
-                        else if (selected == 2) {  
-                            currentState = AppState::Scores;
-                        }
-                        else if (selected == 3) {  
-                            window.close();
-                        }
+                        else if (selected == 3) { currentState = AppState::Scores; } 
+                        else if (selected == 4) { window.close(); } 
                     }
                 }
             }
             else if (currentState == AppState::Playing) {
                 if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape) {
-                        currentState = AppState::Menu;
-                    }
+                    if (event.key.code == sf::Keyboard::Escape) currentState = AppState::Menu;
 
                     if (event.key.code == sf::Keyboard::P) {
                         game.captureState(savedGameState);
                         hasSavedState = true;
-                        std::cout << "Stan gry zapisany w pamieci! (P)\n";
+                        std::cout << "Zapisano w pamieci (P)\n";
                     }
-
                     if (event.key.code == sf::Keyboard::F5) {
-                        GameState currentGameState;
-                        game.captureState(currentGameState);
-                        if (currentGameState.saveToFile("zapis.txt")) {
-                            std::cout << "Gra zapisana do pliku! (F5)\n";
-                        }
+                        GameState gs;
+                        game.captureState(gs);
+                        gs.saveToFile("zapis.txt");
+                        std::cout << "Zapisano do pliku (F5)\n";
                     }
-
                     if (event.key.code == sf::Keyboard::L && hasSavedState) {
-                        if (game.loadState(savedGameState)) {
-                            std::cout << "Stan gry wczytany z pamieci! (L)\n";
-                        }
+                        game.loadState(savedGameState);
                     }
                 }
             }
             else if (currentState == AppState::Scores) {
                 if (event.type == sf::Event::KeyPressed) {
-                    if (event.key.code == sf::Keyboard::Escape || event.key.code == sf::Keyboard::Enter) {
+                    if (event.key.code == sf::Keyboard::Escape || event.key.code == sf::Keyboard::Enter)
                         currentState = AppState::Menu;
-                    }
                 }
             }
         }
@@ -119,98 +116,108 @@ int main() {
                 game.update();
             }
             else {
-                static sf::Clock gameOverClock;
-                if (gameOverClock.getElapsedTime().asSeconds() > 2.0f) {
+                
+                static sf::Clock clock;
+                if (clock.getElapsedTime().asSeconds() > 2.0f) {
+                    
+                    lastScore = game.getScore();
+
+                    if (lastScore > highScore) {
+                        highScore = lastScore;
+                        
+                        std::ofstream outputFile("highscore.txt");
+                        if (outputFile.is_open()) {
+                            outputFile << highScore;
+                            outputFile.close();
+                        }
+                    }
+
                     currentState = AppState::Menu;
-                    gameOverClock.restart();
+                    clock.restart();
                 }
             }
         }
 
-        window.clear(sf::Color(20, 20, 30));
+        window.clear();
+        window.draw(background);
 
         if (currentState == AppState::Menu) {
             menu.draw(window);
 
+            
             if (fontLoaded) {
-                std::ifstream testFile("zapis.txt");
-                bool saveFileExists = testFile.good();
-                testFile.close();
+                sf::Text best;
+                best.setFont(font);
+                best.setString("Rekord: " + std::to_string(highScore));
+                best.setCharacterSize(18);
+                best.setFillColor(sf::Color::Yellow);
+                best.setPosition(650, 10);
+                window.draw(best);
 
-                if (saveFileExists) {
-                    sf::Text saveInfo;
-                    saveInfo.setFont(font);
-                    saveInfo.setString("Plik zapisu gry istnieje\n(Wczytaj gre z menu)");
-                    saveInfo.setCharacterSize(16);
-                    saveInfo.setFillColor(sf::Color::Green);
-                    saveInfo.setPosition(50, 500);
-                    window.draw(saveInfo);
-                }
-
-                sf::Text menuControls;
-                menuControls.setFont(font);
-                menuControls.setString("Sterowanie menu:\nStrzalki - wybor\nEnter - potwierdz");
-                menuControls.setCharacterSize(16);
-                menuControls.setFillColor(sf::Color::Cyan);
-                menuControls.setPosition(50, 400);
-                window.draw(menuControls);
+                sf::Text help;
+                help.setFont(font);
+                help.setString("Strzalki - nawigacja | Enter - wybor/zmiana");
+                help.setCharacterSize(14);
+                help.setFillColor(sf::Color::Cyan);
+                help.setPosition(10, 570);
+                window.draw(help);
             }
         }
         else if (currentState == AppState::Playing) {
             game.render(window);
 
-            if (game.isGameOver()) {
-                if (fontLoaded) {
-                    sf::Text gameOverText;
-                    gameOverText.setFont(font);
-                    gameOverText.setString("KONIEC GRY!\nPowrot do menu...");
-                    gameOverText.setCharacterSize(30);
-                    gameOverText.setFillColor(sf::Color::Red);
-                    gameOverText.setPosition(250, 250);
-                    window.draw(gameOverText);
-                }
-            }
-
-            if (fontLoaded) {
-                sf::Text controls;
-                controls.setFont(font);
-                controls.setString("Sterowanie gry:\nA/D lub Strzalki - ruch paletka\nP - zapisz stan (pamiec)\nF5 - zapisz stan (plik)\nL - wczytaj stan z pamieci\nESC - powrot do menu");
-                controls.setCharacterSize(16);
-                controls.setFillColor(sf::Color::Yellow);
-                controls.setPosition(20, 20);
-                window.draw(controls);
+            if (game.isGameOver() && fontLoaded) {
+                sf::Text over;
+                over.setFont(font);
+                over.setString("GAME OVER");
+                over.setCharacterSize(50);
+                over.setFillColor(sf::Color::Red);
+                sf::FloatRect textRect = over.getLocalBounds();
+                over.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+                over.setPosition(400, 300);
+                window.draw(over);
             }
         }
         else if (currentState == AppState::Scores) {
+           
             if (fontLoaded) {
                 sf::Text title;
                 title.setFont(font);
                 title.setString("TABELA WYNIKOW");
                 title.setCharacterSize(40);
-                title.setFillColor(sf::Color::Yellow);
-                title.setPosition(250, 100);
+                title.setFillColor(sf::Color::Magenta);
+             
+                sf::FloatRect tr = title.getLocalBounds();
+                title.setOrigin(tr.width / 2, tr.height / 2);
+                title.setPosition(400, 100);
                 window.draw(title);
 
-                sf::Text scores;
-                scores.setFont(font);
-                scores.setString("1. Gracz 1 - 1000 pkt\n2. Gracz 2 - 800 pkt\n3. Gracz 3 - 600 pkt\n4. Gracz 4 - 400 pkt\n5. Gracz 5 - 200 pkt");
-                scores.setCharacterSize(24);
-                scores.setFillColor(sf::Color::White);
-                scores.setPosition(280, 180);
-                window.draw(scores);
+                std::string scoreStr = "";
+                scoreStr += "NAJLEPSZY WYNIK:  " + std::to_string(highScore) + "\n\n";
+                scoreStr += "OSTATNI WYNIK:    " + std::to_string(lastScore) + "\n";
 
-                sf::Text instruction;
-                instruction.setFont(font);
-                instruction.setString("Nacisnij ESC lub ENTER aby wrocic do menu");
-                instruction.setCharacterSize(20);
-                instruction.setFillColor(sf::Color::Green);
-                instruction.setPosition(200, 450);
-                window.draw(instruction);
+                sf::Text scoresText;
+                scoresText.setFont(font);
+                scoresText.setString(scoreStr);
+                scoresText.setCharacterSize(30);
+                scoresText.setFillColor(sf::Color::White);
+
+                sf::FloatRect sr = scoresText.getLocalBounds();
+                scoresText.setOrigin(sr.width / 2, sr.height / 2);
+                scoresText.setPosition(400, 300);
+                window.draw(scoresText);
+
+                sf::Text info;
+                info.setFont(font);
+                info.setString("Nacisnij ESC aby wrocic");
+                info.setCharacterSize(20);
+                info.setFillColor(sf::Color::Green);
+                info.setPosition(280, 500);
+                window.draw(info);
             }
         }
 
         window.display();
     }
-
     return 0;
 }
