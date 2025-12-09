@@ -1,5 +1,6 @@
 #ifndef PADDLE_H
 #define PADDLE_H
+#pragma once
 
 #include <SFML/Graphics.hpp>
 
@@ -14,8 +15,7 @@ private:
 
 public:
     Paletka(float startX, float startY, float sw, float wy, float speed)
-        : x(startX), y(startY), szerokosc(sw), wysokosc(wy), predkosc(speed)
-    {
+        : x(startX), y(startY), szerokosc(sw), wysokosc(wy), predkosc(speed) {
         shape.setSize(sf::Vector2f(szerokosc, wysokosc));
         shape.setOrigin(szerokosc / 2.f, wysokosc / 2.f);
         shape.setPosition(x, y);
@@ -37,6 +37,17 @@ public:
         if (x - half < 0) x = half;
         if (x + half > width) x = width - half;
         shape.setPosition(x, y);
+    }
+
+    
+    void setPosition(float newX, float newY) {
+        x = newX;
+        y = newY;
+        shape.setPosition(x, y);
+    }
+
+    sf::FloatRect getGlobalBounds() const {
+        return shape.getGlobalBounds();
     }
 
     void draw(sf::RenderTarget& target) {
