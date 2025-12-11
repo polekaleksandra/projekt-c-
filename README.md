@@ -29,7 +29,7 @@ System High Score:
 
 Zapis najlepszego wyniku do pliku.
 
-Wyświetlanie rekordu oraz ostatniego wyniku na ekranie końcowym.
+Wyświetlanie rekordu oraz ostatniego wyniku w zakładce wyniki.
 
 Zapis i Odczyt Stanu Gry:
 
