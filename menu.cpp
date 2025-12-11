@@ -3,22 +3,17 @@
 #include <string>
 
 Menu::Menu(float width, float height) {
+    // Ładowanie czcionki
     if (!font.loadFromFile("arial.ttf")) {
-        if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
-            
-        }
+        if (!font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {}
     }
 
     menuItems.resize(5);
-
     std::string labels[] = {
-        "Nowa gra",
-        "Ksztalt: KULA",  
-        "Wczytaj gre",
-        "Wyniki",
-        "Wyjscie"
+        "Nowa gra", "Ksztalt: KULA", "Wczytaj gre", "Wyniki", "Wyjscie"
     };
 
+    // Konfiguracja wyglądu przycisków
     for (int i = 0; i < 5; i++) {
         menuItems[i].setFont(font);
         menuItems[i].setString(labels[i]);
@@ -28,7 +23,7 @@ Menu::Menu(float width, float height) {
     }
 
     selectedItemIndex = 0;
-    menuItems[0].setFillColor(sf::Color::Red);
+    menuItems[0].setFillColor(sf::Color::Red); // Podświetlenie pierwszego elementu
 }
 
 void Menu::draw(sf::RenderWindow& window) {
@@ -37,18 +32,11 @@ void Menu::draw(sf::RenderWindow& window) {
     }
 }
 
-
 void Menu::changeShapeText(BallType type) {
     switch (type) {
-    case BallType::Circle:
-        menuItems[1].setString("Ksztalt: KULA");
-        break;
-    case BallType::Star:
-        menuItems[1].setString("Ksztalt: GWIAZDA");
-        break;
-    case BallType::Heart:
-        menuItems[1].setString("Ksztalt: SERCE");
-        break;
+    case BallType::Circle: menuItems[1].setString("Ksztalt: KULA"); break;
+    case BallType::Star:   menuItems[1].setString("Ksztalt: GWIAZDA"); break;
+    case BallType::Heart:  menuItems[1].setString("Ksztalt: SERCE"); break;
     }
 }
 
