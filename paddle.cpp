@@ -3,7 +3,7 @@
 Paletka::Paletka(float startX, float startY, float sw, float wy, float speed)
     : x(startX), y(startY), szerokosc(sw), wysokosc(wy), predkosc(speed) {
     shape.setSize(sf::Vector2f(szerokosc, wysokosc));
-    shape.setOrigin(szerokosc / 2.f, wysokosc / 2.f);
+    shape.setOrigin(szerokosc / 2.f, wysokosc / 2.f); 
     shape.setPosition(x, y);
     shape.setFillColor(sf::Color::Green);
 }
@@ -18,6 +18,7 @@ void Paletka::moveRight() {
     shape.setPosition(x, y);
 }
 
+// Zabezpieczenie przed wyjściem paletki poza ekran
 void Paletka::clampToBounds(float width) {
     float half = szerokosc / 2.f;
     if (x - half < 0) x = half;
@@ -31,6 +32,13 @@ void Paletka::setPosition(float newX, float newY) {
     shape.setPosition(x, y);
 }
 
+sf::FloatRect Paletka::getGlobalBounds() const {
+    return shape.getGlobalBounds();
+}
+
+void Paletka::draw(sf::RenderTarget& target) {
+    target.draw(shape);
+}
 sf::FloatRect Paletka::getGlobalBounds() const {
     return shape.getGlobalBounds();
 }
