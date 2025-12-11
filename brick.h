@@ -9,8 +9,7 @@ class Brick : public sf::RectangleShape {
 private:
     int punktyZycia;
     bool jestZniszczony;
- 
-    static const std::array<sf::Color, 4> colorLUT;
+    static const std::array<sf::Color, 5> colorLUT;
 
 public:
     Brick(sf::Vector2f startPo, sf::Vector2f rozmiar, int L);
