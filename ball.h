@@ -5,6 +5,7 @@
 #include <SFML/Graphics.hpp>
 #include "paddle.h" 
 
+// Typ wyliczeniowy dla różnych kształtów piłki
 enum class BallType {
     Circle,
     Star,
@@ -17,11 +18,12 @@ private:
     float vx, vy;
     float radius;
 
+    // Przechowujemy definicje trzech kształtów
     sf::CircleShape circleShape;
     sf::ConvexShape starShape;
     sf::ConvexShape heartShape;
 
-    BallType currentType;
+    BallType currentType; // Aktualnie wybrany kształt
 
 public:
     Pilka(float startX, float startY, float velX, float velY, float r);
@@ -33,7 +35,7 @@ public:
     bool collidePaddle(const Paletka& p);
     void setState(float newX, float newY, float newVx, float newVy);
 
-    void setType(BallType type);
+    void setType(BallType type); // Zmiana kształtu
 
     void draw(sf::RenderTarget& target) const;
     sf::FloatRect getGlobalBounds() const;
