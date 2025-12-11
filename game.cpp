@@ -9,13 +9,10 @@ Game::Game()
     , m_score(0)
     , m_comboMultiplier(0) {
 
-   
+    // Ładowanie czcionki
     if (!m_font.loadFromFile("arial.ttf")) {
-        if (!m_font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
-            std::cout << "Nie udalo sie zaladowac czcionki!\n";
-        }
+        if (!m_font.loadFromFile("C:/Windows/Fonts/arial.ttf")) { }
     }
-
 
     m_scoreText.setFont(m_font);
     m_scoreText.setCharacterSize(24);
@@ -27,7 +24,6 @@ Game::Game()
     m_comboText.setCharacterSize(20);
     m_comboText.setFillColor(sf::Color::Yellow);
     m_comboText.setPosition(10.f, 40.f);
-    m_comboText.setString("");
 
     reset();
 }
@@ -39,16 +35,17 @@ void Game::setBallType(BallType type) {
 void Game::update() {
     if (m_gameOver) return;
 
+    // Sterowanie paletką
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) || sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
         m_paletka.moveLeft();
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) || sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
         m_paletka.moveRight();
 
     m_paletka.clampToBounds(WIDTH);
-
     m_pilka.move();
     m_pilka.collideWalls(WIDTH, HEIGHT);
 
+    // Reset Combo przy dotknięciu paletki
     if (m_pilka.collidePaddle(m_paletka)) {
         m_comboMultiplier = 0;
     }
@@ -57,13 +54,13 @@ void Game::update() {
         m_gameOver = true;
     }
 
+    // Kolizja z blokami i naliczanie punktów
     for (auto& blok : m_bloki) {
         if (!blok.czyZniszczony() && m_pilka.getGlobalBounds().intersects(blok.getGlobalBounds())) {
             blok.trafienie();
             m_pilka.bounceY();
 
-            m_comboMultiplier++;
-
+            m_comboMultiplier++; // Zwiększenie serii
             int punktyZaBlok = 10 * m_comboMultiplier;
             m_score += punktyZaBlok;
 
@@ -72,6 +69,7 @@ void Game::update() {
         }
     }
 
+    // Usuwanie zniszczonych bloków (iteracja od tyłu)
     for (int i = static_cast<int>(m_bloki.size()) - 1; i >= 0; i--) {
         if (m_bloki[i].czyZniszczony()) {
             m_bloki.erase(m_bloki.begin() + i);
@@ -81,18 +79,14 @@ void Game::update() {
 
 void Game::render(sf::RenderWindow & window) {
     m_paletka.draw(window);
-
-    if (!m_gameOver) {
-        m_pilka.draw(window);
-    }
+    if (!m_gameOver) m_pilka.draw(window);
 
     for (auto& blok : m_bloki) {
         window.draw(blok);
     }
 
     window.draw(m_scoreText);
-
-    if (m_comboMultiplier > 1) {
+    if (m_comboMultiplier > 1) { // Wyświetlanie combo tylko przy serii > 1
         window.draw(m_comboText);
     }
 }
@@ -102,41 +96,24 @@ void Game::reset() {
     m_score = 0;
     m_comboMultiplier = 0;
     m_scoreText.setString("Punkty: 0");
-    m_comboText.setString("");
 
+    // Losowanie kierunku startowego piłki
     float velX = (rand() % 2 == 0) ? 4.0f : -4.0f;
-
     m_pilka = Pilka(400.f, 300.f, velX, 3.f, 8.f);
-   
-
     m_paletka = Paletka(400.f, 550.f, 100.f, 20.f, 8.f);
 
     m_bloki.clear();
     const int ILOSC_KOLUMN = 8;
     const int ILOSC_WIERSZY = 8;
-
     float ROZMIAR_BLOKU_X = (800.f - (ILOSC_KOLUMN - 1) * 2.f) / ILOSC_KOLUMN;
     float ROZMIAR_BLOKU_Y = 25.f;
 
+    // Generowanie planszy z różnym HP dla rzędów
     for (int y = 0; y < ILOSC_WIERSZY; y++) {
         for (int x = 0; x < ILOSC_KOLUMN; x++) {
             float posX = x * (ROZMIAR_BLOKU_X + 2.f);
             float posY = y * (ROZMIAR_BLOKU_Y + 2.f) + 50.f;
-
-            int L;
-            if (y == 0) {
-                L = 4; 
-            }
-            else if (y == 1) {
-                L = 3; 
-            }
-            else if (y < 4) {
-                L = 2;
-            }
-            else {
-                L = 1;
-            }
-
+            int L = (y == 0) ? 4 : (y == 1) ? 3 : (y < 4) ? 2 : 1;
             m_bloki.emplace_back(sf::Vector2f(posX, posY), sf::Vector2f(ROZMIAR_BLOKU_X, ROZMIAR_BLOKU_Y), L);
         }
     }
@@ -162,13 +139,8 @@ bool Game::loadState(const GameState & state) {
         for (const auto& block : blocks) {
             m_bloki.emplace_back(sf::Vector2f(block.x, block.y), sf::Vector2f(bw, 25.f), block.hp);
         }
-
         m_gameOver = false;
-        std::cout << "Stan gry wczytany pomyslnie\n";
         return true;
     }
-    catch (...) {
-        std::cout << "Blad podczas wczytywania stanu gry\n";
-        return false;
-    }
+    catch (...) { return false; }
 }
