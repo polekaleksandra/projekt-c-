@@ -1,10 +1,11 @@
 #include "brick.h"
 
-const std::array<sf::Color, 4> Brick::colorLUT = {
+const std::array<sf::Color, 5> Brick::colorLUT = {
     sf::Color(0, 0, 0, 0),       
     sf::Color(255, 0, 0),        
     sf::Color(255, 255, 0),      
-    sf::Color(0, 0, 255)         
+    sf::Color(0, 0, 255),        
+    sf::Color(128, 0, 128)       
 };
 
 Brick::Brick(sf::Vector2f startPo, sf::Vector2f rozmiar, int L) {
@@ -18,18 +19,19 @@ Brick::Brick(sf::Vector2f startPo, sf::Vector2f rozmiar, int L) {
 }
 
 void Brick::aktualizujKolor() {
+    
     if (punktyZycia > 0 && punktyZycia < static_cast<int>(colorLUT.size())) {
         this->setFillColor(colorLUT[punktyZycia]);
     }
     else {
-        this->setFillColor(colorLUT[0]); 
+        this->setFillColor(colorLUT[0]);
     }
 }
 
 void Brick::trafienie() {
     if (jestZniszczony) return;
     punktyZycia--;
-    aktualizujKolor();
+    aktualizujKolor(); 
     if (punktyZycia <= 0)
         jestZniszczony = true;
 }
