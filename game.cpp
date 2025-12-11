@@ -1,19 +1,21 @@
 #include "Game.h"
 #include <iostream>
 #include <string>
+#include <cstdlib> 
 
 Game::Game()
     : m_paletka(400.f, 550.f, 100.f, 20.f, 8.f)
     , m_pilka(400.f, 300.f, 4.f, 3.f, 8.f)
     , m_score(0)
-    , m_comboMultiplier(0) { 
+    , m_comboMultiplier(0) {
 
+   
     if (!m_font.loadFromFile("arial.ttf")) {
-       
         if (!m_font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
             std::cout << "Nie udalo sie zaladowac czcionki!\n";
         }
     }
+
 
     m_scoreText.setFont(m_font);
     m_scoreText.setCharacterSize(24);
@@ -60,10 +62,8 @@ void Game::update() {
             blok.trafienie();
             m_pilka.bounceY();
 
-      
             m_comboMultiplier++;
 
-          
             int punktyZaBlok = 10 * m_comboMultiplier;
             m_score += punktyZaBlok;
 
@@ -79,7 +79,7 @@ void Game::update() {
     }
 }
 
-void Game::render(sf::RenderWindow& window) {
+void Game::render(sf::RenderWindow & window) {
     m_paletka.draw(window);
 
     if (!m_gameOver) {
@@ -104,12 +104,17 @@ void Game::reset() {
     m_scoreText.setString("Punkty: 0");
     m_comboText.setString("");
 
-    m_pilka = Pilka(400.f, 300.f, 4.f, 3.f, 8.f);
+    float velX = (rand() % 2 == 0) ? 4.0f : -4.0f;
+
+    m_pilka = Pilka(400.f, 300.f, velX, 3.f, 8.f);
+   
+
     m_paletka = Paletka(400.f, 550.f, 100.f, 20.f, 8.f);
 
     m_bloki.clear();
     const int ILOSC_KOLUMN = 8;
-    const int ILOSC_WIERSZY = 7;
+    const int ILOSC_WIERSZY = 8;
+
     float ROZMIAR_BLOKU_X = (800.f - (ILOSC_KOLUMN - 1) * 2.f) / ILOSC_KOLUMN;
     float ROZMIAR_BLOKU_Y = 25.f;
 
@@ -117,18 +122,31 @@ void Game::reset() {
         for (int x = 0; x < ILOSC_KOLUMN; x++) {
             float posX = x * (ROZMIAR_BLOKU_X + 2.f);
             float posY = y * (ROZMIAR_BLOKU_Y + 2.f) + 50.f;
-            
-            int L = (y < 1) ? 3 : (y < 3) ? 2 : 1;
+
+            int L;
+            if (y == 0) {
+                L = 4; 
+            }
+            else if (y == 1) {
+                L = 3; 
+            }
+            else if (y < 4) {
+                L = 2;
+            }
+            else {
+                L = 1;
+            }
+
             m_bloki.emplace_back(sf::Vector2f(posX, posY), sf::Vector2f(ROZMIAR_BLOKU_X, ROZMIAR_BLOKU_Y), L);
         }
     }
 }
 
-void Game::captureState(GameState& state) const {
+void Game::captureState(GameState & state) const {
     state.capture(m_paletka, m_pilka, m_bloki);
 }
 
-bool Game::loadState(const GameState& state) {
+bool Game::loadState(const GameState & state) {
     try {
         sf::Vector2f paddlePos = state.getPaddlePosition();
         m_paletka.setPosition(paddlePos.x, paddlePos.y);
@@ -139,8 +157,7 @@ bool Game::loadState(const GameState& state) {
 
         m_bloki.clear();
         const auto& blocks = state.getBlocks();
-
-        float bw = (800.f - (8 - 1) * 2.f) / 8; 
+        float bw = (800.f - (8 - 1) * 2.f) / 8;
 
         for (const auto& block : blocks) {
             m_bloki.emplace_back(sf::Vector2f(block.x, block.y), sf::Vector2f(bw, 25.f), block.hp);
