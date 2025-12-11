@@ -4,18 +4,17 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
-
 #include "ball.h" 
 
 class Menu {
 public:
     Menu(float width, float height);
     void draw(sf::RenderWindow& window);
-    void MoveUp();
-    void MoveDown();
+    void MoveUp();   // Nawigacja w górę
+    void MoveDown(); // Nawigacja w dół
     int getSelectedItem() { return selectedItemIndex; }
 
-    void changeShapeText(BallType type);
+    void changeShapeText(BallType type); // Aktualizacja tekstu w opcji wyboru kształtu
 
 private:
     int selectedItemIndex;
