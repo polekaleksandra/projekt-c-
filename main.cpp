@@ -10,7 +10,7 @@
 enum class AppState { Menu, Playing, Scores, Exiting };
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Arkanoid - Projekt");
+    sf::RenderWindow window(sf::VideoMode(800, 600), "Projekt");
     window.setFramerateLimit(60);
 
     sf::VertexArray background(sf::Quads, 4);
