@@ -15,13 +15,13 @@ void GameState::capture(const Paletka& paddle, const Pilka& ball, const std::vec
     ballVelocity.x = ball.getVx();
     ballVelocity.y = ball.getVy();
 
+    // Kopiujemy tylko te bloki, które nie są zniszczone
     blocks.clear();
     for (const auto& brick : bricks) {
         if (!brick.czyZniszczony()) {
             blocks.emplace_back(brick.getX(), brick.getY(), brick.getHP());
         }
     }
-
     std::cout << "Stan gry zapisany: " << blocks.size() << " blokow\n";
 }
 
@@ -32,6 +32,7 @@ bool GameState::saveToFile(const std::string& filename) {
         return false;
     }
 
+    // Zapis w formacie tekstowym
     file << "PADDLE " << paddlePosition.x << " " << paddlePosition.y << "\n";
     file << "BALL " << ballPosition.x << " " << ballPosition.y << " "
         << ballVelocity.x << " " << ballVelocity.y << "\n";
@@ -42,52 +43,28 @@ bool GameState::saveToFile(const std::string& filename) {
     }
 
     file.close();
-    std::cout << "Gra zapisana do pliku: " << filename << "\n";
     return true;
 }
 
 bool GameState::loadFromFile(const std::string& filename) {
     std::ifstream file(filename);
-    if (!file.is_open()) {
-        std::cout << "Blad: Nie mozna otworzyc pliku " << filename << " do odczytu\n";
-        return false;
-    }
+    if (!file.is_open()) return false;
 
     std::string label;
+    if (!(file >> label >> paddlePosition.x >> paddlePosition.y) || label != "PADDLE") return false;
+    if (!(file >> label >> ballPosition.x >> ballPosition.y >> ballVelocity.x >> ballVelocity.y) || label != "BALL") return false;
 
-    
-    if (!(file >> label >> paddlePosition.x >> paddlePosition.y) || label != "PADDLE") {
-        std::cout << "Blad: Nieprawidlowy format pliku (PADDLE)\n";
-        return false;
-    }
-
-   
-    if (!(file >> label >> ballPosition.x >> ballPosition.y >> ballVelocity.x >> ballVelocity.y) || label != "BALL") {
-        std::cout << "Blad: Nieprawidlowy format pliku (BALL)\n";
-        return false;
-    }
-
-    
     int blocksCount;
-    if (!(file >> label >> blocksCount) || label != "BLOCKS_COUNT") {
-        std::cout << "Blad: Nieprawidlowy format pliku (BLOCKS_COUNT)\n";
-        return false;
-    }
+    if (!(file >> label >> blocksCount) || label != "BLOCKS_COUNT") return false;
 
-    
     blocks.clear();
     for (int i = 0; i < blocksCount; ++i) {
         float x, y;
         int hp;
-        if (!(file >> x >> y >> hp)) {
-            std::cout << "Blad: Nie mozna wczytac bloku " << i << "\n";
-            return false;
-        }
+        if (!(file >> x >> y >> hp)) return false;
         blocks.emplace_back(x, y, hp);
     }
 
     file.close();
-    std::cout << "Gra wczytana z pliku: " << filename << "\n";
-    std::cout << "Wczytano: " << blocks.size() << " blokow\n";
     return true;
 }
